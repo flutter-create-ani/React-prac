@@ -1,6 +1,7 @@
 import RestaurantCard from "./RestaurantCard";
 import { useState, useEffect } from "react";
 import Shimmer from "./Shimmer";
+import useOnlineStatus from "../utils/useOnlineStatus";
 
 const Body = () => {
   // Local State Variable - Super powerful variable
@@ -8,9 +9,10 @@ const Body = () => {
   const [filteredRestaurant, setFilteredRestaurant] = useState([]);
 
   const [searchText, setSearchText] = useState("");
+  // console.log(useEffect);
 
   // Whenever state variables update, react triggers a reconciliation cycle(re-renders the component)
-  console.log("Body Rendered");
+  // console.log("Body Rendered");
 
   useEffect(() => {
     fetchData();
@@ -18,16 +20,20 @@ const Body = () => {
 
   const fetchData = async () => {
     const data = await fetch(
-      "https://www.swiggy.com/dapi/restaurants/list/v5?lat=12.9351929&lng=77.62448069999999&page_type=DESKTOP_WEB_LISTING"
+      "https://services.broki.in/api/service-list?per_page=all&status=1"
     );
-
+    //console.log(data);
     const json = await data.json();
-
+   // console.log(json);
     // Optional Chaining
-    setListOfRestraunt(json?.data?.cards[2]?.data?.data?.cards);
-    setFilteredRestaurant(json?.data?.cards[2]?.data?.data?.cards);
+    setListOfRestraunt(
+      json?.data
+    );
+    setFilteredRestaurant(json?.data);
   };
+  const onlineStatus = useOnlineStatus();
 
+  if (onlineStatus === false) return (<h1>Oops check your internet connection</h1>) 
   return listOfRestaurants.length === 0 ? (
     <Shimmer />
   ) : (
@@ -46,10 +52,12 @@ const Body = () => {
             onClick={() => {
               // Filter the restraunt cards and update the UI
               // searchText
-              console.log(searchText);
+              //console.log(searchText);
 
               const filteredRestaurant = listOfRestaurants.filter((res) =>
-                res.data.name.toLowerCase().includes(searchText.toLowerCase())
+              {
+                return res.name.toLowerCase().includes(searchText.toLowerCase());
+              }
               );
 
               setFilteredRestaurant(filteredRestaurant);
@@ -62,9 +70,9 @@ const Body = () => {
           className="filter-btn"
           onClick={() => {
             const filteredList = listOfRestaurants.filter(
-              (res) => res.data.avgRating > 4
+              (res) => res.price <= 20000
             );
-            setListOfRestraunt(filteredList);
+            setFilteredRestaurant(filteredList);
           }}
         >
           Top Rated Restaurants
@@ -72,7 +80,7 @@ const Body = () => {
       </div>
       <div className="res-container">
         {filteredRestaurant.map((restaurant) => (
-          <RestaurantCard key={restaurant.data.id} resData={restaurant} />
+          <RestaurantCard key={restaurant?.id} resData={restaurant} />
         ))}
       </div>
     </div>
